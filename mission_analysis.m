@@ -45,7 +45,7 @@
 %
 % --------------------------------------------------------------------------
 
-clear all
+clear 
 close all
 clc
 %% DATA SECTION
@@ -54,6 +54,10 @@ planet_2 = 4;                           % Mars number according to uplanet funct
 mu_earth = astroConstants(13);          % Earth's planetary constant 
 mu_mars = astroConstants(14);           % Mars' planetary constant
 mu_sun = astroConstants(4);             % Sun planetary constant
+G = astroConstants(1);                  % Universal gravitational constant
+m_mars = mu_mars/G;                     % Mass of Mars
+m_sun = mu_sun/G;                       % Mass of the Sun
+m_earth = mu_earth/G;                   % Mass of the Earth
 mr_earth = astroConstants(23);          % Earth's mean radius
 mr_mars = astroConstants(24);           % Mars' mean radius
 
@@ -71,8 +75,8 @@ date_arrf_mjd2000 = date2mjd2000(date_arrf);
 
 % Definition of launch and arrival window arrays
 N = 5;                                              % Days per step 
-dep_dates = [date_depi_mjd2000:N:date_depf_mjd2000];
-arr_dates = [date_arri_mjd2000:N:date_arrf_mjd2000];
+dep_dates = date_depi_mjd2000:N:date_depf_mjd2000;
+arr_dates = date_arri_mjd2000:N:date_arrf_mjd2000;
 
 % Martian seasons expressed as true anamalies
 thetai_w = (-17-7.5)*pi/180;
@@ -99,7 +103,7 @@ ub = [date_depf_mjd2000 date_arrf_mjd2000];
 x0 = [9041 9356; 
       9801 10136];
 flag_ff = 2;  
-options = optimoptions('fmincon','UseParallel',true)
+options = optimoptions('fmincon','UseParallel',true);
 [n,m]=size(x0);
 dates=zeros(n,m);
 dv_d=zeros(n,1);
@@ -134,7 +138,7 @@ kep_Ma=kep_Md;
 kep_Ma(6)=kep_Md(6)+dt2dtheta(kep_Md,mu_sun,tof_sol);
 state_Ma=kep2car(kep_Ma,mu_sun);
 
-[~,~,~,~,V1] = lambertMR(state_Ed(1:3),state_Ma(1:3),tof_sol,mu_sun,0,0,0,0)
+[At,Pt,Et,~,V1] = lambertMR(state_Ed(1:3),state_Ma(1:3),tof_sol,mu_sun,0,0,0,0);
 
 state0 = [state_Ed(1:3) V1];
 kep_T=car2kep(state0,mu_sun);
@@ -161,19 +165,75 @@ p6=plot3(state_Ea(1),state_Ea(2),state_Ea(3),'ow');
 plot3(state_Md(1),state_Md(2),state_Md(3),'*w');
 plot3(state_Ma(1),state_Ma(2),state_Ma(3),'ow');
 %legend([p1 p2 p3 p5 p6],'Earth orbit','Mars orbit','Transfer orbit', 'Start','Finish');
-title(['Trajectories']);
+title('Trajectories');
 xlabel('x [Km]');
 ylabel('y [Km]');
 zlabel('z [Km]');
 
 %% SAA - Sun Aspect Angle evolution
-[theta,S] = saa(mu_sun,state0(1:3),state0(4:6),tof_sol)
+[theta,S] = saa(mu_sun,state0(1:3),state0(4:6),tof_sol);
 
 figure()
 hold on 
 grid on
 axis equal
-plot([1:length(theta)],theta)
+plot(1:length(theta),theta)
+
+%% Escape hyperbola
+% earth_rsoi = norm(state_Ed(1:3))*(m_earth/m_sun)^(2/5); 
+% [T_earth_t,state_Et]=ode113(@(t,y)dyn_2BP(t,y,mu_sun),0:1:4*24*3600,state_Ed,options);
+% [T_t,state_t]=ode113(@(t,y)dyn_2BP(t,y,mu_sun),T_earth_t,state0,options);
+% [rr_escape,vv_escape,date_escape] = patching(state_Et,state_t,T_t,DAYd,earth_rsoi);
+% escape_time = date_escape-DAYd;         % Expressed in days
+
+%% Capture hyperbola
+mars_rsoi = norm(state_Ma(1:3))*(m_mars/m_sun)^(2/5);
+[T_mars_t,state_Mt]=ode113(@(t,y)dyn_2BP(t,y,mu_sun),0:60:tof_sol,state_Md,options);
+[T_t,state_t]=ode113(@(t,y)dyn_2BP(t,y,mu_sun),T_mars_t,state0,options);
+[rr_capture,vv_capture,date_capture] = patching(state_Mt,state_t,T_t,DAYd,mars_rsoi);
+ht = cross(rr_capture,vv_capture)/norm(cross(rr_capture,vv_capture));
+S = vv_capture/norm(vv_capture);
+B = cross(S,ht);
+k = [0 0 1];                            % Unit vector normal to the ecliptic plane
+T = cross(S,k)/norm(cross(S,k));
+R = cross(S,T);
+alfa = asin(dot(B,R));
+
+%% Earth visibility window from 2025/08/31 08:00 to 2026/03/31 08:00
+load marseph20250831_20260331.mat
+load phoboseph20250831_20260331.mat
+S_Mars = marseph20250831_20260331;
+S_Phobos = phoboseph20250831_20260331;
+dt = date2mjd2000([2025 08 31 08 05 00])-date2mjd2000([2025 08 31 08 00 00]); % 5minutes
+dates = [date2mjd2000([2025 08 31 08 00 00]):dt:date2mjd2000([2025 08 31 08 05 00])];
+vd = evw(mr_mars, S_Mars, S_Phobos,dates,1,100);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 % figure()
 % hold on
@@ -185,6 +245,7 @@ plot([1:length(theta)],theta)
 % drawPlanet('Earth',state_Ea(1:3),gca,100);
 % drawPlanet('Mars',state_Md(1:3),gca,1000);
 % plot3(state_t(:,1), state_t(:,2), state_t(:,3),'--');
+
 %% Plot trajectories
 
 
