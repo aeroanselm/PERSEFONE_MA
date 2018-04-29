@@ -49,12 +49,14 @@ clear
 close all
 clc
 %% DATA SECTION
+addpath(genpath('/media/alessandro/6A7E48F07E48B69B/Users/alema/Documents/GitHub/PERSEFONE_MA/functions'))
 planet_1 = 3;                           % Earth number according to uplanet function
 planet_2 = 4;                           % Mars number according to uplanet function
 mu_earth = astroConstants(13);          % Earth's planetary constant 
 mu_mars = astroConstants(14);           % Mars' planetary constant
 mu_sun = astroConstants(4);             % Sun planetary constant
 G = astroConstants(1);                  % Universal gravitational constant
+AU = astroConstants(2);                 % Astronomic Unit
 m_mars = mu_mars/G;                     % Mass of Mars
 m_sun = mu_sun/G;                       % Mass of the Sun
 m_earth = mu_earth/G;                   % Mass of the Earth
@@ -94,7 +96,7 @@ dv2=PCdata.dv2;
 DV=PCdata.DV;
 dv1_dMAX=3.5;
 %PCplot(dep,arr,TOF,DV,1,'Earth to Mars \DeltaV_{tot}','[Km/s]',10);
-porkChopPlot(PCdata,1,0,2,dv1_dMAX);
+porkChopPlot(PCdata,1,0,1,dv1_dMAX);
 
 %% Optimization throught fmincon
 A = []; b = []; Aeq = []; beq = [];
@@ -103,14 +105,15 @@ ub = [date_depf_mjd2000 date_arrf_mjd2000];
 x0 = [9041 9356; 
       9801 10136];
 flag_ff = 2;  
-options = optimoptions('fmincon','UseParallel',true);
+options = optimoptions('fmincon','UseParallel',false);
 [n,m]=size(x0);
 dates=zeros(n,m);
 dv_d=zeros(n,1);
 dv_a=zeros(n,1);
 
 for it=1:2
-    dates(it,:) = fmincon(@(X)ffdv(X,flag_ff,planet_1,planet_2),x0(it,:),A,b,Aeq,beq,lb,ub,@(X)dv1con(X),options);
+    dates(it,:) = fmincon(@(X)ffdv(X,flag_ff,planet_1,planet_2),x0(it,:),...
+                            A,b,Aeq,beq,lb,ub,@(X)dv1con(X),options);
     [dv_d(it),dv_a(it)] = evaldv (dates(it,:),planet_1,planet_2);
 end
 
@@ -147,37 +150,30 @@ T_T=period(kep_T,mu_sun);
 options=odeset('Reltol',1e-13,'AbsTol',1e-14);
 [t_tran,state_t]=ode113(@(t,y)dyn_2BP(t,y,mu_sun),[0,T_T],state0,options);
 
-% Plot
+%% Plot
 figure();
 hold on
 %grid on
 axis equal
-set(gca,'Color','k')
-drawPlanet('Sun',[0 0 0],gca,20);
-drawPlanet('Earth',state_Ed(1:3),gca,1000);
-drawPlanet('Mars',state_Ma(1:3),gca,1000);
+%set(gca,'Color','k')
+drawPlanet('Sun',[0 0 0],gca,25);
+drawPlanet('Earth',state_Ed(1:3),gca,1300);
+drawPlanet('Mars',state_Ma(1:3),gca,1300);
 p1=plot3(state_E(:,1),state_E(:,2),state_E(:,3),'--b');
-p2=plot3(state_M(:,1),state_M(:,2),state_M(:,3),'--w');
+p2=plot3(state_M(:,1),state_M(:,2),state_M(:,3),'--k');
 p3=plot3(state_t(:,1),state_t(:,2),state_t(:,3),'--r','LineWidth',2);
+%alpha(0.3);
 %p4=plot3(state_Tp(:,1),state_Tp(:,2),state_Tp(:,3),'r','LineWidth',2);
-p5=plot3(state_Ed(1),state_Ed(2),state_Ed(3),'*w');
-p6=plot3(state_Ea(1),state_Ea(2),state_Ea(3),'ow');
-plot3(state_Md(1),state_Md(2),state_Md(3),'*w');
-plot3(state_Ma(1),state_Ma(2),state_Ma(3),'ow');
-%legend([p1 p2 p3 p5 p6],'Earth orbit','Mars orbit','Transfer orbit', 'Start','Finish');
+p5=plot3(state_Ed(1),state_Ed(2),state_Ed(3),'*k');
+p6=plot3(state_Ea(1),state_Ea(2),state_Ea(3),'ok');
+plot3(state_Md(1),state_Md(2),state_Md(3),'*k');
+plot3(state_Ma(1),state_Ma(2),state_Ma(3),'ok');
+legend([p1 p2 p3 p5 p6],'Earth orbit','Mars orbit','Transfer orbit', 'Start','Finish');
 title('Trajectories');
 xlabel('x [Km]');
 ylabel('y [Km]');
 zlabel('z [Km]');
 
-%% SAA - Sun Aspect Angle evolution
-[theta,S] = saa(mu_sun,state0(1:3),state0(4:6),tof_sol);
-
-figure()
-hold on 
-grid on
-axis equal
-plot(1:length(theta),theta)
 
 %% Escape hyperbola
 % earth_rsoi = norm(state_Ed(1:3))*(m_earth/m_sun)^(2/5); 
@@ -189,8 +185,8 @@ plot(1:length(theta),theta)
 %% Capture hyperbola
 mars_rsoi = norm(state_Ma(1:3))*(m_mars/m_sun)^(2/5);
 [T_mars_t,state_Mt]=ode113(@(t,y)dyn_2BP(t,y,mu_sun),0:60:tof_sol,state_Md,options);
-[T_t,state_t]=ode113(@(t,y)dyn_2BP(t,y,mu_sun),T_mars_t,state0,options);
-[rr_capture,vv_capture,date_capture] = patching(state_Mt,state_t,T_t,DAYd,mars_rsoi);
+[T_t,state_tt]=ode113(@(t,y)dyn_2BP(t,y,mu_sun),T_mars_t,state0,options);
+[rr_capture,vv_capture,date_capture] = patching(state_Mt,state_tt,T_t,DAYd,mars_rsoi);
 ht = cross(rr_capture,vv_capture)/norm(cross(rr_capture,vv_capture));
 S = vv_capture/norm(vv_capture);
 B = cross(S,ht);
@@ -199,14 +195,100 @@ T = cross(S,k)/norm(cross(S,k));
 R = cross(S,T);
 alfa = asin(dot(B,R));
 
+kep_hc = car2kep([rr_capture vv_capture], mu_mars);
+[~,state_Mhc]=ode113(@(t,y)dyn_2BP(t,y,mu_mars),[0 1*3600*24],[rr_capture vv_capture],options);
+
+figure()
+hold on
+grid on 
+plot3(state_Mhc(:,1), state_Mhc(:,2), state_Mhc(:,3))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%% Plot
+
+% gamma = [1 0 0];
+% hm = cross(state_Ma(1:3),state_Ma(4:6))/norm(cross(state_Ma(1:3),state_Ma(4:6)));
+% eem = cross(state_Ma(4:6),hm)/mu_sun-state_Ma(1:3)/norm(state_Ma(1:3));
+% em = eem/norm(eem);
+% pm = cross(hm,em);    
+
+
+
+% figure();
+% hold on
+% %grid on
+% axis equal
+% %set(gca,'Color','k')
+% drawPlanet('Sun',[0 0 0],gca,20);
+% drawPlanet('Earth',state_Ed(1:3),gca,1000);
+% drawPlanet('Mars',state_Ma(1:3),gca,1000);
+% p1=fill3(state_E(:,1),state_E(:,2),state_E(:,3),'--b');
+% p2=plot3(state_M(:,1),state_M(:,2),state_M(:,3),'--k');
+% p3=fill3(state_t(:,1),state_t(:,2),state_t(:,3),'--r','LineWidth',2);
+% alpha(0.3);
+% %p4=plot3(state_Tp(:,1),state_Tp(:,2),state_Tp(:,3),'r','LineWidth',2);
+% p5=plot3(state_Ed(1),state_Ed(2),state_Ed(3),'*k');
+% p6=plot3(state_Ea(1),state_Ea(2),state_Ea(3),'ok');
+% plot3(state_Md(1),state_Md(2),state_Md(3),'*k');
+% plot3(state_Ma(1),state_Ma(2),state_Ma(3),'ok');
+% legend([p1 p2 p3 p5 p6],'Earth orbit','Mars orbit','Transfer orbit', 'Start','Finish');
+% title('Trajectories');
+% xlabel('x [Km]');
+% ylabel('y [Km]');
+% zlabel('z [Km]');
+
+%% SAA - Sun Aspect Angle evolution
+[theta,S,t_theta] = saa(mu_sun,state0(1:3),state0(4:6),tof_sol);
+
+figure()
+hold on 
+grid on
+axis equal
+plot(t_theta/3600/24,theta)
+title('SAA evolution during the interplanetary leg')
+xlabel('Time of flight [days]')
+ylabel('SAA [�]')
+%
+%
+%
 %% Earth visibility window from 2025/08/31 08:00 to 2026/03/31 08:00
 load marseph20250831_20260331.mat
 load phoboseph20250831_20260331.mat
-S_Mars = marseph20250831_20260331;
-S_Phobos = phoboseph20250831_20260331;
+S_Mars = marseph;
+S_Phobos = phoboseph;
 dt = date2mjd2000([2025 08 31 08 05 00])-date2mjd2000([2025 08 31 08 00 00]); % 5minutes
-dates = [date2mjd2000([2025 08 31 08 00 00]):dt:date2mjd2000([2025 08 31 08 05 00])];
-vd = evw(mr_mars, S_Mars, S_Phobos,dates,1,100);
+dates = [date2mjd2000([2025 08 31 08 00 00]):dt:date2mjd2000([2026 03 31 08 00 00])];
+vd = evw(mr_mars, S_Mars(10000:10500,:), S_Phobos(10000:10500,:),dates(10000:10500),1,100);
 
 
 

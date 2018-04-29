@@ -1,4 +1,4 @@
-function [theta,S] = saa(mu,r0,v0,tof)
+function [theta,S,T] = saa(mu,r0,v0,tof)
 
 s0 = [];
 s0(1) = r0(1);
@@ -17,7 +17,7 @@ theta = [];
 for k = 1:n
     R = [S(k,1) S(k,2) S(k,3)];
     V = [S(k,4) S(k,5) S(k,6)];
-    theta(k) = acos(dot(R,V)/(norm(R)*norm(V)))*180/pi;
+    theta(k) = 90-acos(dot(R,V)/(norm(R)*norm(V)))*180/pi;
 end
 
 figure()
