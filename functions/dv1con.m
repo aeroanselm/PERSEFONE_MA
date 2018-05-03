@@ -15,5 +15,5 @@ function [c,ceq] = dv1con(x)
 [dv_d,dv_a] = evaldv (x,3,4)
 
 ceq = 0;
-c = dv_d-3.45;
+c = dv_a-2.5;
 
