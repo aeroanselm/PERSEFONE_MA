@@ -43,13 +43,13 @@
 % CHANGELOG: 
 %   ALESSANDRO MARIA MASSERINI creation of this script - 15/04/2018
 %
-% --------------------------------------------------------------------------
+% -------------------------------------------------------------------------
 
 clear 
 close all
 clc
-%% DATA SECTION
-addpath(genpath('/media/alessandro/6A7E48F07E48B69B/Users/alema/Documents/GitHub/PERSEFONE_MA/functions'))
+%% DATA SECTION------------------------------------------------------------
+addpath(genpath('/home/alessandro/Documenti/GitHub/PERSEFONE_MA/functions'))
 planet_1 = 3;                           % Earth number according to uplanet function
 planet_2 = 4;                           % Mars number according to uplanet function
 mu_earth = astroConstants(13);          % Earth's planetary constant 
@@ -60,32 +60,35 @@ AU = astroConstants(2);                 % Astronomic Unit
 m_mars = mu_mars/G;                     % Mass of Mars
 m_sun = mu_sun/G;                       % Mass of the Sun
 m_earth = mu_earth/G;                   % Mass of the Earth
+%m_phobos = 
 mr_earth = astroConstants(23);          % Earth's mean radius
 mr_mars = astroConstants(24);           % Mars' mean radius
 
-%% Definition of the launch and arrival window 
+%% Definition of the launch and arrival window----------------------------- 
 date_depi = [2023 01 01 12 00 00];      % Initial departure date
 date_depf = [2027 12 31 12 00 00];      % Final departure date
 date_arri = [2024 03 01 12 00 00];      % Initial arrival date
 date_arrf = [2030 06 31 12 00 00];      % Final arrival date
 
-% Conversion to mjd200
+% Conversion to mjd2000----------------------------------------------------
 date_depi_mjd2000 = date2mjd2000(date_depi);
 date_depf_mjd2000 = date2mjd2000(date_depf);
 date_arri_mjd2000 = date2mjd2000(date_arri);
 date_arrf_mjd2000 = date2mjd2000(date_arrf);
 
-% Definition of launch and arrival window arrays
+% Definition of launch and arrival window arrays---------------------------
 N = 5;                                              % Days per step 
-dep_dates = date_depi_mjd2000:N:date_depf_mjd2000;
-arr_dates = date_arri_mjd2000:N:date_arrf_mjd2000;
+% dep_dates = date_depi_mjd2000:N:date_depf_mjd2000;
+% arr_dates = date_arri_mjd2000:N:date_arrf_mjd2000;
+dep_dates = 8601:N:9301;
+arr_dates = 9076:N:9626;
 
-% Martian seasons expressed as true anamalies
+% Martian seasons expressed as true anamalies------------------------------
 thetai_w = (-17-7.5)*pi/180;
 thetaf_w = (-17+7.5)*pi/180;
 thetac = [thetai_w thetaf_w];
 
-% Pork chop plot of the Lambert's problem
+% Pork chop plot of the Lambert's problem----------------------------------
 [PCdata] = porkChopDatav3(planet_1,planet_2,dep_dates,arr_dates);
 save PCdata.mat
 dep=PCdata.dep;
@@ -98,26 +101,45 @@ dv1_dMAX=3.5;
 %PCplot(dep,arr,TOF,DV,1,'Earth to Mars \DeltaV_{tot}','[Km/s]',10);
 porkChopPlot(PCdata,1,0,1,dv1_dMAX);
 
-%% Optimization throught fmincon
+%% Optimization throught ga------------------------------------------------
 A = []; b = []; Aeq = []; beq = [];
-lb = [date_depi_mjd2000 date_arri_mjd2000];
-ub = [date_depf_mjd2000 date_arrf_mjd2000];
-x0 = [9041 9356; 
-      9801 10136];
-flag_ff = 2;  
-options = optimoptions('fmincon','UseParallel',false);
-[n,m]=size(x0);
-dates=zeros(n,m);
-dv_d=zeros(n,1);
-dv_a=zeros(n,1);
+lb = [8601 9301];
+ub = [9076 9626];
+options = optimoptions('ga','PopulationSize',30,...
+                            'MaxGenerations',20,...
+                            'FunctionTolerance',0,...
+                            'UseParallel',true,...
+                            'ConstraintTolerance',1e-10);
+sol_ga = ga(@(X)ffdv(X,2,planet_1,planet_2),2,A,b,Aeq,beq,lb,ub,@(X)dv1con(X),options);
 
-for it=1:2
-    dates(it,:) = fmincon(@(X)ffdv(X,flag_ff,planet_1,planet_2),x0(it,:),...
-                            A,b,Aeq,beq,lb,ub,@(X)dv1con(X),options);
-    [dv_d(it),dv_a(it)] = evaldv (dates(it,:),planet_1,planet_2);
-end
+%% Optimization throught fmincon-------------------------------------------
+x0 = [sol_ga(1) sol_ga(2)];
+options_fmincon = optimoptions('fmincon','UseParallel',true);
+dates = fmincon(@(X)ffdv(X,2,planet_1,planet_2),x0,...
+                      A,b,Aeq,beq,lb,ub,@(X)dv1con(X),options_fmincon);
+[dv_d,dv_a] = evaldv (dates,planet_1,planet_2);
 
-%% Transfer orbit definition
+
+
+% A = []; b = []; Aeq = []; beq = [];
+% lb = [date_depi_mjd2000 date_arri_mjd2000];
+% ub = [date_depf_mjd2000 date_arrf_mjd2000];
+% x0 = [9041 9356; 
+%       9801 10136];
+% flag_ff = 2;  
+% options = optimoptions('fmincon','UseParallel',false);
+% [n,m]=size(x0);
+% dates=zeros(n,m);
+% dv_d=zeros(n,1);
+% dv_a=zeros(n,1);
+% 
+% for it=1:2
+%     dates(it,:) = fmincon(@(X)ffdv(X,flag_ff,planet_1,planet_2),x0(it,:),...
+%                             A,b,Aeq,beq,lb,ub,@(X)dv1con(X),options);
+%     [dv_d(it),dv_a(it)] = evaldv (dates(it,:),planet_1,planet_2);
+% end
+
+%% Transfer orbit definition------------------------------------------------
 DAYd = dates(1,1);
 DAYa = dates(1,2);
 tof_sol=(DAYa-DAYd)*24*3600;
@@ -150,7 +172,7 @@ T_T=period(kep_T,mu_sun);
 options=odeset('Reltol',1e-13,'AbsTol',1e-14);
 [t_tran,state_t]=ode113(@(t,y)dyn_2BP(t,y,mu_sun),[0,T_T],state0,options);
 
-%% Plot
+%% Plot---------------------------------------------------------------------
 figure();
 hold on
 %grid on
