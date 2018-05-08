@@ -10,7 +10,7 @@ function [kep] = car2kep (state, mu)
 %
 % DESCRIPTION:
 %   The function uses the standard algorithm to pass from cartesian 
-%   coordinates to keplerian coordinates or orabital parameters.
+%   coordinates to keplerian coordinates or orbital parameters.
 %   
 %   See also:   kep2car.m
 %

@@ -13,7 +13,7 @@ r = [];
 for k = 1:length(T)
     r_pb = norm([rr_pb(k,1), rr_pb(k,2), rr_pb(k,3)]);
     r =[r;r_pb];
-    if abs(r_pb-r_soi)<tol
+    if abs(r_pb-r_soi)<=tol
         rr = [rr_pb(k,1), rr_pb(k,2), rr_pb(k,3)];
         vv = [vv_pb(k,1), vv_pb(k,2), vv_pb(k,3)];
         date = datei+Tdays(k);

@@ -12,8 +12,8 @@ function [c,ceq] = dv1con(x)
 % 
 % s1 = kep2car(kep1,mu);
 % s2 = kep2car(kep2,mu);
-[dv_d,dv_a] = evaldv (x,3,4)
+[dv_d,dv_a] = evaldv (x,4,3)
 
 ceq = 0;
-c = dv_a-3.2;
+c = dv_d-2.65;
 
