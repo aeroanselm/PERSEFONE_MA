@@ -43,11 +43,11 @@ lb = [date_depi_mjd2000 date_arri_mjd2000];     % Lower boundary f the ga domain
 ub = [date_depf_mjd2000 date_arrf_mjd2000];     % Upper boundary f the ga domain
 
 % Setting ga options
-options = optimoptions('ga','PopulationSize',100,...
-                            'MaxGenerations',20,...
-                            'FunctionTolerance',0,...
-                            'UseParallel',true,...
-                            'ConstraintTolerance',1e-10);   
+% options = optimoptions('ga','PopulationSize',100,...
+%                             'MaxGenerations',20,...
+%                             'FunctionTolerance',0,...
+%                             'UseParallel',true,...
+%                             'ConstraintTolerance',1e-10);   
 
 % Calling 'ga'                            
 %sol_ga = ga(@(X)ffdv(X,2,planet_1,planet_2),2,A,b,Aeq,beq,lb,ub,@(X)dv1con(X),options);
@@ -118,39 +118,87 @@ R = cross(S,T);                                                         % Unit v
 theta0 = asin(dot(B,R));                                                % Angle between B and T 
 
 %% Selecting Ipact Parameter and Periapsis Radius to design the capture leg of the hyperbola
-%Delta = 7924*B;                         % Impact parameter as a vector
-
-dv_m = [];
-t_m = [];
-rpH = [];
-Delta = 2*mr_mars:100:3*mr_mars;
-theta = [-5:0.02:10]*pi/180;
-lb = [Delta(1) theta(1)];
-ub = [Delta(end) theta(end)];
-
-%man_ga = ga(@(x)manopt(x,T,R,mars_rsoi,vv_capture, mu_mars, kep_p, date_capture),...
- %   2,A,b,Aeq,beq,lb,ub,@(x)mancon(x,T,R,mars_rsoi,vv_capture, mu_mars, kep_p, date_capture),options);
-
-sol = fmincon(@(x)manopt(x,T,R,mars_rsoi,vv_capture, mu_mars, kep_p, date_capture),[7924 theta0],...
-                      A,b,Aeq,beq,lb,ub,@(x)mancon(x,T,R,mars_rsoi,vv_capture, mu_mars, kep_p, date_capture),options_fmincon);
-
-
-[DVs, DVtot, T, Ttot, rp_H] = manopt(sol, T, R, rsoi, vvsoi, mu, kep_p, date_soi);
-
-
+%theta = [0:2:360]*pi/180;
+theta = 34*pi/180;
+%dvtot = [];
+%for i = 1:length(theta)
+%     Delta = 7924*sin(theta(i))*R + 7924*cos(theta(i))*T;                         % Impact parameter as a vector
+%     gamma = asin(norm(Delta)/mars_rsoi);
+%     rrpar = mars_rsoi*cos(gamma)*-S;
+%     rr_capture = rrpar+Delta;
+%     state_h = [rr_capture vv_capture];
+%     rp_f = kep_p(1);
+%     [dvv, dv, dt,stateman] = mancombo(state_h,mu_mars,kep_p(3),kep_p(4),0.9,rp_f);
+%     dvtot(i) = sum(dv);
+%end
+Delta = 7924*sin(theta)*R + 7924*cos(theta)*T;
+%Delta = 7924*B;     
+gamma = asin(norm(Delta)/mars_rsoi);
+rrpar = mars_rsoi*cos(gamma)*-S;
+rr_capture = rrpar+Delta;
+state_h = [rr_capture vv_capture];
+rp_f = kep_p(1);
+[dvv, dv, dt,stateman,rp_h, kepf, sol] = mancombo(state_h,mu_mars,kep_p(3),kep_p(4),0.9,rp_f);
+dvtot = sum(dv);
+h_closest = rp_h - mr_mars;
 
 %%
-Delta = 2*mr_mars:100:3*mr_mars;
-dv_m=[];
-parfor i = 1:length(Delta)
-
-    [dv_m(i)] = manopt([Delta(i) 23*pi/180],T,R, mars_rsoi, vv_capture, mu_mars, kep_p, date_capture)
-end
-
 figure()
 hold on
-grid on
-plot(Delta,dv_m, 'r')
+axis equal
+drawPlanet('Mars',[0 0 0],gca,1);
+plot3(stateman(:,1),stateman(:,2),stateman(:,3),'Linewidth',1.5)    
+title('Approaching Phobos orbit manoeuvres')
+legend('Mars','Trajectory')
+
+%% Lambert arc recalculation
+kep_Msoi = uplanet(date_capture,4);
+state_Msoi = kep2car(kep_Msoi, mu_sun);
+
+[At,Pt,Et,~,V1,V2] = lambertMR(state_Ed(1:3),rr_capture+state_Msoi(1:3),tof_sol-(DAYa-date_capture)*3600*24,mu_sun,0,0,0,0);
+V_relsoi=V2-state_Msoi(4:6);
+norm(vv_capture-V_relsoi)
+    
+    
+    
+    
+    
+    
+% figure()
+% hold on
+% grid on
+% plot(theta*180/pi,dvtot)
+% dv_m = [];
+% t_m = [];
+% rpH = [];
+% Delta = 2*mr_mars:100:3*mr_mars;
+% theta = [-5:0.02:10]*pi/180;
+% lb = [Delta(1) theta(1)];
+% ub = [Delta(end) theta(end)];
+% 
+% %man_ga = ga(@(x)manopt(x,T,R,mars_rsoi,vv_capture, mu_mars, kep_p, date_capture),...
+%  %   2,A,b,Aeq,beq,lb,ub,@(x)mancon(x,T,R,mars_rsoi,vv_capture, mu_mars, kep_p, date_capture),options);
+% 
+% sol = fmincon(@(x)manopt(x,T,R,mars_rsoi,vv_capture, mu_mars, kep_p, date_capture),[7924 theta0],...
+%                       A,b,Aeq,beq,lb,ub,@(x)mancon(x,T,R,mars_rsoi,vv_capture, mu_mars, kep_p, date_capture),options_fmincon);
+% 
+% 
+% [DVs, DVtot, T, Ttot, rp_H] = manopt(sol, T, R, rsoi, vvsoi, mu, kep_p, date_soi);
+% 
+
+
+% %%
+% Delta = 2*mr_mars:100:3*mr_mars;
+% dv_m=[];
+% parfor i = 1:length(Delta)
+% 
+%     [dv_m(i)] = manopt([Delta(i) 23*pi/180],T,R, mars_rsoi, vv_capture, mu_mars, kep_p, date_capture)
+% end
+% 
+% figure()
+% hold on
+% grid on
+% plot(Delta,dv_m, 'r')
 
 % figure()
 % hold on
