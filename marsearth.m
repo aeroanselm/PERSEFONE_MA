@@ -19,37 +19,37 @@ mr_mars = astroConstants(24);           % Mars' mean radius
 
 
 %% Definition of the launch and arrival window----------------------------- 
-date_depi = [2028 09 1 12 00 00];      % Initial departure date
-date_depf = [2035 06 19 12 00 00];      % Final departure date
-date_arri = [2029 03 06 12 00 00];      % Initial arrival date
-date_arrf = [2035 05 10 12 00 00];      % Final arrival date
+medate_depi = [2028 09 1 12 00 00];      % Initial departure date
+medate_depf = [2035 06 19 12 00 00];      % Final departure date
+medate_arri = [2029 03 06 12 00 00];      % Initial arrival date
+medate_arrf = [2035 05 10 12 00 00];      % Final arrival date
 
 % Conversion to mjd2000----------------------------------------------------
-date_depi_mjd2000 = date2mjd2000(date_depi);
-date_depf_mjd2000 = date2mjd2000(date_depf);
-date_arri_mjd2000 = date2mjd2000(date_arri);
-date_arrf_mjd2000 = date2mjd2000(date_arrf);
+medate_depi_mjd2000 = date2mjd2000(medate_depi);
+medate_depf_mjd2000 = date2mjd2000(medate_depf);
+medate_arri_mjd2000 = date2mjd2000(medate_arri);
+medate_arrf_mjd2000 = date2mjd2000(medate_arrf);
 
 % Definition of launch and arrival window arrays---------------------------
 N = 5;                                              % Days per step 
-dep_dates = date_depi_mjd2000:N:date_depf_mjd2000;
-arr_dates = date_arri_mjd2000:N:date_arrf_mjd2000;
+medep_dates = medate_depi_mjd2000:N:medate_depf_mjd2000;
+mearr_dates = medate_arri_mjd2000:N:medate_arrf_mjd2000;
 
 %%
-[PCdata] = porkChopDatav3(planet_2,planet_1,dep_dates,arr_dates);
+[mePCdata] = porkChopDatav3(planet_2,planet_1,medep_dates,mearr_dates);
 dv1_dMAX=3;
-porkChopPlot(PCdata,1,0,1,dv1_dMAX);
+porkChopPlot(mePCdata,1,0,1,dv1_dMAX);
 
 %% Optimization throught ga------------------------------------------------
 A = []; b = []; Aeq = []; beq = [];
-lb = [date_depi_mjd2000 date_arri_mjd2000];
-ub = [date_depf_mjd2000 date_arrf_mjd2000];
-options = optimoptions('ga','PopulationSize',100,...
-                            'MaxGenerations',20,...
-                            'FunctionTolerance',0,...
-                            'UseParallel',true,...
-                            'ConstraintTolerance',1e-10);
-sol_ga = ga(@(X)ffdv(X,2,planet_2,planet_1),2,A,b,Aeq,beq,lb,ub,@(X)dv1conme(X),options);
+lb = [medate_depi_mjd2000 medate_arri_mjd2000];
+ub = [medate_depf_mjd2000 medate_arrf_mjd2000];
+% options = optimoptions('ga','PopulationSize',100,...
+%                             'MaxGenerations',20,...
+%                             'FunctionTolerance',0,...
+%                             'UseParallel',true,...
+%                             'ConstraintTolerance',1e-10);
+% sol_ga = ga(@(X)ffdv(X,2,planet_2,planet_1),2,A,b,Aeq,beq,lb,ub,@(X)dv1conme(X),options);
 
 %% Optimization throught fmincon-------------------------------------------
 %x0= [sol_ga(1) sol_ga(2)];

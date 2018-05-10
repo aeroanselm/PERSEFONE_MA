@@ -41,6 +41,10 @@ if (kep2(3) - kep1(3)) < 0 && di > 0
     vva2 = vva + dvv;
     state2 = [rra2 vva2];
     kep2 = car2kep(state2,mu);
+    kep2(3) = i_f;
+    state2 = kep2car(kep2,mu);
+    vva2 = state2(4:6);
+    dvv = vva2 - vva;
 elseif (kep2(3) - kep1(3)) > 0 && di < 0
     v_norm = va2*sin(di)*-hh;
     v_par = (va2*cos(di) - va)*vva_u;   
@@ -48,6 +52,10 @@ elseif (kep2(3) - kep1(3)) > 0 && di < 0
     vva2 = vva + dvv;
     state2 = [rra2 vva2];
     kep2 = car2kep(state2,mu);
+    kep2(3) = i_f;
+    state2 = kep2car(kep2,mu);
+    vva2 = state2(4:6);
+    dvv = vva2 - vva;
 end
 
 % dv calculation 

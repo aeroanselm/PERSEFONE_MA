@@ -94,7 +94,7 @@ kep_Ma(6) = kep_Md(6)+dt2dtheta(kep_Md,mu_sun,tof_sol);
 state_Ma = kep2car(kep_Ma,mu_sun);
 
 % Transfer arc computation
-[At,Pt,Et,~,V1,V2] = lambertMR(state_Ed(1:3),state_Ma(1:3),tof_sol,mu_sun,0,0,0,0);
+[~,~,~,~,V1,~] = lambertMR(state_Ed(1:3),state_Ma(1:3),tof_sol,mu_sun,0,0,0,0);
 
 % Transfer orbit computation
 state0 = [state_Ed(1:3) V1];        % Initial state vector
@@ -117,37 +117,65 @@ T = cross(S,k)/norm(cross(S,k));                                        % Unit v
 R = cross(S,T);                                                         % Unit vector lying on B-plane and normal wrt S and T
 theta0 = asin(dot(B,R));                                                % Angle between B and T 
 
-%% Selecting Ipact Parameter and Periapsis Radius to design the capture leg of the hyperbola
-%theta = [0:2:360]*pi/180;
-theta = 34*pi/180;
-%dvtot = [];
-%for i = 1:length(theta)
-%     Delta = 7924*sin(theta(i))*R + 7924*cos(theta(i))*T;                         % Impact parameter as a vector
-%     gamma = asin(norm(Delta)/mars_rsoi);
-%     rrpar = mars_rsoi*cos(gamma)*-S;
-%     rr_capture = rrpar+Delta;
-%     state_h = [rr_capture vv_capture];
-%     rp_f = kep_p(1);
-%     [dvv, dv, dt,stateman] = mancombo(state_h,mu_mars,kep_p(3),kep_p(4),0.9,rp_f);
-%     dvtot(i) = sum(dv);
-%end
-Delta = 7924*sin(theta)*R + 7924*cos(theta)*T;
-%Delta = 7924*B;     
+% %% Selecting Ipact Parameter and Periapsis Radius to design the capture leg of the hyperbola
+% theta_deg = 0:40;
+% theta = theta_deg*pi/180;
+% delta =  7924;
+% [n,m] = size(delta);
+% 
+% figure()
+% hold on
+% grid on
+% title('\Delta V depending on aiming radius vector');
+% xlabel('Impact parameter [km]');
+% ylabel('\Delta V_{tot} [km/s]');
+% 
+% dvtot = zeros(n,m);
+% for k = 1:length(theta)
+%     
+%         B = sin(theta(k))*R + cos(theta(k))*T;
+%         Delta = delta*B;    
+%         gamma = asin(norm(Delta)/mars_rsoi);
+%         rrpar = mars_rsoi*cos(gamma)*-S;
+%         rr_capture = rrpar+Delta;
+%         state_h = [rr_capture vv_capture];
+%         rp_f = kep_p(1);
+%         [dvv, dv, dt,stateman,rp_h, kepf, sol] = mancombo(state_h,mu_mars,kep_p(3),kep_p(4),0.9,rp_f);
+%         
+%         h_closest = rp_h - mr_mars;
+%         if h_closest < 120
+%              dvtot(k) = NaN;
+%         else
+%             dvtot(k) = sum(dv);
+%         end
+%         plot(theta,dvtot);
+% %         str = sprintf("theta = %d", theta*180/pi);
+% %         legend(str);
+% end
+
+%%
+%plot(theta*180/pi,dvtot);
+
+%%
+theta_deg = 30;
+theta = theta_deg*pi/180;
+delta =  7924;
+B = sin(theta)*R + cos(theta)*T;
+Delta = delta*B;    
 gamma = asin(norm(Delta)/mars_rsoi);
 rrpar = mars_rsoi*cos(gamma)*-S;
 rr_capture = rrpar+Delta;
 state_h = [rr_capture vv_capture];
 rp_f = kep_p(1);
 [dvv, dv, dt,stateman,rp_h, kepf, sol] = mancombo(state_h,mu_mars,kep_p(3),kep_p(4),0.9,rp_f);
-dvtot = sum(dv);
+        
 h_closest = rp_h - mr_mars;
-
 %%
 figure()
 hold on
 axis equal
 drawPlanet('Mars',[0 0 0],gca,1);
-plot3(stateman(:,1),stateman(:,2),stateman(:,3),'Linewidth',1.5)    
+comet3(stateman(:,1),stateman(:,2),stateman(:,3));%,'Linewidth',1.5)    
 title('Approaching Phobos orbit manoeuvres')
 legend('Mars','Trajectory')
 
@@ -155,11 +183,112 @@ legend('Mars','Trajectory')
 kep_Msoi = uplanet(date_capture,4);
 state_Msoi = kep2car(kep_Msoi, mu_sun);
 
-[At,Pt,Et,~,V1,V2] = lambertMR(state_Ed(1:3),rr_capture+state_Msoi(1:3),tof_sol-(DAYa-date_capture)*3600*24,mu_sun,0,0,0,0);
+[~,~,~,~,~,V2] = lambertMR(state_Ed(1:3),rr_capture+state_Msoi(1:3),tof_sol-(DAYa-date_capture)*3600*24,mu_sun,0,0,0,0);
 V_relsoi=V2-state_Msoi(4:6);
-norm(vv_capture-V_relsoi)
+dsm_a = norm(vv_capture-V_relsoi);
     
-    
+
+%% Return to Earth - Definition of the launch and arrival window----------------------------- 
+medate_depi = [2028 09 1 12 00 00];      % Initial departure date
+medate_depf = [2035 06 19 12 00 00];      % Final departure date
+medate_arri = [2029 03 06 12 00 00];      % Initial arrival date
+medate_arrf = [2035 05 10 12 00 00];      % Final arrival date
+
+% Conversion to mjd2000----------------------------------------------------
+medate_depi_mjd2000 = date2mjd2000(medate_depi);
+medate_depf_mjd2000 = date2mjd2000(medate_depf);
+medate_arri_mjd2000 = date2mjd2000(medate_arri);
+medate_arrf_mjd2000 = date2mjd2000(medate_arrf);
+
+% Definition of launch and arrival window arrays---------------------------
+N = 5;                                              % Days per step 
+medep_dates = medate_depi_mjd2000:N:medate_depf_mjd2000;
+mearr_dates = medate_arri_mjd2000:N:medate_arrf_mjd2000;
+
+%% PorkChop analysis
+[mePCdata] = porkChopDatav3(planet_2,planet_1,medep_dates,mearr_dates);
+medv1_dMAX=3;
+porkChopPlot(mePCdata,1,0,1,medv1_dMAX);
+
+%% Optimization throught fmincon-------------------------------------------
+lb = [medate_depi_mjd2000 medate_arri_mjd2000];
+ub = [medate_depf_mjd2000 medate_arrf_mjd2000];
+
+%x0= [sol_ga(1) sol_ga(2)];
+x0 = [10496 10832;
+     11261 11592;
+     12101 12332];
+options_fmincon = optimoptions('fmincon','UseParallel',true);
+
+[m,n] = size(x0);
+medates = zeros(m,n);
+meDV = zeros(m,n);
+for i = 1:size(x0,1)
+medates(i,:) = fmincon(@(X)ffdv(X,2,planet_2,planet_1),x0(i,:),...
+                      A,b,Aeq,beq,lb,ub,@(X)dv1conme(X),options_fmincon);
+[medv_d,medv_a] = evaldv (medates(i,:),planet_2,planet_1);
+meDV(i,:) = [medv_d medv_a];
+end
+
+%% Transfer orbit definition------------------------------------------------
+DAYd = medates(1,1);          % Selected departure date [mjd2000]
+DAYa = medates(1,2);          % Selected arrival date   [mjd2000]
+tof_sol = (DAYa - DAYd)*24*3600;        % Transfer time
+
+% Setting ode options
+options = odeset('Reltol',1e-13,'AbsTol',1e-14);
+
+% Earth - State definition at departure and arrival dates
+kep_Ed = uplanet(DAYd,planet_1);
+state_Ed = kep2car(kep_Ed,mu_sun);
+T_E = period(kep_Ed,mu_sun);
+[tv_E,state_E] = ode113(@(t,y)dyn_2BP(t,y,mu_sun),[0,T_E],state_Ed,options);
+kep_Ea = kep_Ed;
+kep_Ea(6) = kep_Ed(6)+dt2dtheta(kep_Ed,mu_sun,tof_sol);
+state_Ea = kep2car(kep_Ea,mu_sun);
+
+% Mars - State definition at departure and arrival dates
+kep_Md = uplanet(DAYd,planet_2);
+state_Md = kep2car(kep_Md,mu_sun);
+T_M = period(kep_Md,mu_sun);
+[tv_M,state_M] = ode113(@(t,y)dyn_2BP(t,y,mu_sun),[0,T_M],state_Md,options);
+kep_Ma = kep_Md;
+kep_Ma(6) = kep_Md(6)+dt2dtheta(kep_Md,mu_sun,tof_sol);
+state_Ma = kep2car(kep_Ma,mu_sun);
+
+% Transfer arc computation
+[~,~,~,~,V1,~] = lambertMR(state_Md(1:3),state_Ea(1:3),tof_sol,mu_sun,0,0,0,0);
+
+% Transfer orbit computation
+state0 = [state_Md(1:3) V1];        % Initial state vector
+kep_T = car2kep(state0,mu_sun);     % Keplerian elements of the transfer orbit
+T_T = period(kep_T,mu_sun);         % Transfer orbit period
+
+[tv_T,state_T] = ode113(@(t,y)dyn_2BP(t,y,mu_sun),[0,T_T],state0,options);
+
+
+%% Escape patching
+[tv_Mt,state_Mt]=ode113(@(t,y)dyn_2BP(t,y,mu_sun),0:60:tof_sol,state_Md,options);
+[tv_t,state_tt]=ode113(@(t,y)dyn_2BP(t,y,mu_sun),tv_Mt,state0,options);
+[rr_escape,vv_escape,date_escape] = patching(state_Mt,state_tt,tv_t,DAYd,mars_rsoi);
+
+%% Lambert arc recalculation
+kep_Msoi = uplanet(date_escape,4);
+state_Msoi = kep2car(kep_Msoi, mu_sun);
+
+[~,~,~,~,V1,~] = lambertMR(state_Msoi(1:3)+rr_escape,state_Ea(1:3),(DAYa-date_escape)*3600*24,mu_sun,0,0,0,0);
+V_relsoi=V1-state_Msoi(4:6);
+dsm_d = norm(vv_escape-V_relsoi)
+
+%% Escape manoeuvres
+rp_esc = kepf(1);
+vv_esc_u = vv_escape/norm(vv_escape);
+vesc = norm(vv_escape);
+Delta = mu_mars/vesc^2*((1+vesc^2*rp_esc/mu_mars)^2-1)^0.5;
+
+% Bplane definition for escaping
+T = 
+kep_he = car2kep([rr_escape vv_escape],mu_mars);
     
     
     

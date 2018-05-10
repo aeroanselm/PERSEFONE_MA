@@ -1,4 +1,4 @@
-function [dvv, dv, dt, kep2] = changeOM(kep, mu, dOM)
+function [dvv, dv, dt,kep1, kep2] = changeOM(kep, mu, dOM)
 
 a = kep(1);
 e = kep(2);
