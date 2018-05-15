@@ -3,7 +3,7 @@ close all
 clc
 
 %% DATA SECTION------------------------------------------------------------
-addpath(genpath('./functions'))         % Adding the functions folder to path [linux version]
+addpath(genpath('./functions'))         % Adding the functions folder to path [linux version, works even on Windows]
 planet_1 = 3;                           % Earth number according to uplanet function
 planet_2 = 4;                           % Mars number according to uplanet function
 mu_earth = astroConstants(13);          % Earth's planetary constant 
@@ -287,7 +287,7 @@ vesc = norm(vv_escape);
 Delta = mu_mars/vesc^2*((1+vesc^2*rp_esc/mu_mars)^2-1)^0.5;
 
 % Bplane definition for escaping
-T = 
+%T = 
 kep_he = car2kep([rr_escape vv_escape],mu_mars);
     
     

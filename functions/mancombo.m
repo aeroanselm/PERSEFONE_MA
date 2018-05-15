@@ -23,13 +23,15 @@ state04 = kep2car(kep2,mu);
 T = period(kepf,mu);
 state05 = kep2car(kepf,mu);
 
-[~,state_1]=ode113(@(t,y)dyn_2BP(t,y,mu),0:10:dt_h_heo,state_h,options);
-[~,state_2]=ode113(@(t,y)dyn_2BP(t,y,mu),0:10:dt_ps,state02,options);
-[~,state_3]=ode113(@(t,y)dyn_2BP(t,y,mu),0:10:dt_OM,state03,options);
-[~,state_4]=ode113(@(t,y)dyn_2BP(t,y,mu),0:10:dt_c,state04,options);
-[~,state_5]=ode113(@(t,y)dyn_2BP(t,y,mu),0:10:T,state05,options);
+[~,state_1]=ode113(@(t,y)dyn_2BP(t,y,mu),[0 dt_h_heo],state_h,options);
+[n,~] = size(state_1);
+state_1 = state_1(round(n/3):end,:);
+[~,state_2]=ode113(@(t,y)dyn_2BP(t,y,mu),[0 dt_ps],state02,options);
+[~,state_3]=ode113(@(t,y)dyn_2BP(t,y,mu),[0 dt_OM],state03,options);
+[~,state_4]=ode113(@(t,y)dyn_2BP(t,y,mu),[0 dt_c],state04,options);
+[~,state_5]=ode113(@(t,y)dyn_2BP(t,y,mu),[0 T],state05,options);
 
-stateall1 = [state_1;state_2;state_3;state_4;state_5];
+stateall1 = struct('state_1',state_1,'state_2',state_2,'state_3',state_3,'state_4',state_4,'state_5',state_5);
 
 dvv1 = [dvv_h_heo; dvv_ps; dvv_OM; dvv_c];
 dv1 = [dv_h_heo; dv_ps; dv_OM; dv_c];
@@ -53,13 +55,14 @@ dvv2 = [dvv_h_heo; dvv_ps; dvv_OM; dvv_c];
 dv2 = [dv_h_heo; dv_ps; dv_OM; dv_c];
 dt2 = [dt_h_heo; dt_ps; dt_OM; dt_c];
 
-[~,state_12]=ode113(@(t,y)dyn_2BP(t,y,mu),0:10:dt_h_heo,state_h,options);
-[~,state_22]=ode113(@(t,y)dyn_2BP(t,y,mu),0:10:dt_ps,state02,options);
-[~,state_32]=ode113(@(t,y)dyn_2BP(t,y,mu),0:10:dt_c,state03,options);
-[~,state_42]=ode113(@(t,y)dyn_2BP(t,y,mu),0:10:dt_OM,state04,options);
-[~,state_52]=ode113(@(t,y)dyn_2BP(t,y,mu),0:10:T,state05,options);
-stateall2 = [state_12;state_22;state_32;state_42;state_52];
-
+[~,state_12]=ode113(@(t,y)dyn_2BP(t,y,mu),[0 dt_h_heo],state_h,options);
+[n2,~] = size(state_12);
+state_12 = state_12(round(n2/3):end,:);
+[~,state_22]=ode113(@(t,y)dyn_2BP(t,y,mu),[0 dt_ps],state02,options);
+[~,state_32]=ode113(@(t,y)dyn_2BP(t,y,mu),[0 dt_c],state03,options);
+[~,state_42]=ode113(@(t,y)dyn_2BP(t,y,mu),[0 dt_OM],state04,options);
+[~,state_52]=ode113(@(t,y)dyn_2BP(t,y,mu),[0 T],state05,options);
+stateall2 = struct('state_1',state_12,'state_2',state_22,'state_3',state_32,'state_4',state_42,'state_5',state_52);
 if sum(dv1) < sum(dv2)
     dvv = dvv1;
     dv = dv1;

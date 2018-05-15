@@ -20,8 +20,8 @@ for k = 1:n
     theta(k) = 90-acos(dot(R,V)/(norm(R)*norm(V)))*180/pi;
 end
 
-figure()
-hold on 
-grid on
-axis equal
-plot3(S(:,1), S(:,2), S(:,3))
+% figure()
+% hold on 
+% grid on
+% axis equal
+% plot3(S(:,1), S(:,2), S(:,3))
