@@ -225,12 +225,12 @@ else
 end
 switch flag
     case 0
-        xlabel(['DEPARTURE [MJD2000]']);
+        xlabel('DEPARTURE [MJD2000]','Interpreter','latex');
         xtickangle(45);
         xticks(dep(1):50:dep(end));
-        ylabel(['ARRIVAL [MJD2000]']);
+        ylabel('ARRIVAL [MJD2000]','Interpreter','latex');
         yticks(arr(1):50:arr(end)); 
-        title(['Pork Chop Plot, destination: Mars']);
+        title('\textbf{Pork Chop Plot, destination: Earth}','Interpreter','latex');
     case 1
 %         datetick('y',29,'keeplimits','keepticks');
 %         datetick('x',29,'keeplimits','keepticks');
@@ -239,9 +239,9 @@ switch flag
         yticks(arr(1):50:arr(end));                               %SET
         datetick('y',1,'keeplimits','keepticks');
         datetick('x',1,'keeplimits','keepticks');
-        xlabel(['DEPARTURE']);
-        ylabel(['ARRIVAL']);
-        title(['Pork Chop Plot, destination: Mars']);
+        xlabel('DEPARTURE','Interpreter','latex');
+        ylabel('ARRIVAL','Interpreter','latex');
+        title('\textbf{Pork Chop Plot, destination: Earth}','Interpreter','latex');
     otherwise
         error ('WRONG flag.');
 end

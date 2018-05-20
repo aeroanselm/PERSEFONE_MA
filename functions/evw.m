@@ -4,7 +4,7 @@ function [visibility_dates] = evw (mr_body1,state_body1, state_body2, dates,flag
 if length(dates)~=size(state_body1,1) || ... 
    size(state_body2,1)~=size(state_body1,1) || ...
    size(state_body2,1)~=length(dates)
-disp("ERROR: matrix dimesions don't match")
+error("Matrix dimesions don't match")
 return
 end
 
@@ -58,10 +58,10 @@ end
 if flag_plot==1
     bool = [];
     for m = 1:length(visibility_dates)
-        if visibility_dates(m)~=NaN
-            bool(m)=1;
-        else
+        if isnan(visibility_dates(m))
             bool(m)=0;
+        else
+            bool(m)=1;
         end
     end
     figure()

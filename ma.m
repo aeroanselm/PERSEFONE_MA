@@ -66,10 +66,10 @@ mr_mars = astroConstants(24);           % Mars' mean radius
 options = odeset('Reltol',1e-13,'AbsTol',1e-14);
 
 %% Definition of the launch and arrival window----------------------------- 
-date_depi = [2023 07 20 12 00 00];      % Initial departure date
-date_depf = [2025 06 19 12 00 00];      % Final departure date
-date_arri = [2024 11 06 12 00 00];      % Initial arrival date
-date_arrf = [2026 05 10 12 00 00];      % Final arrival date
+date_depi = [2023 07 01 12 00 00];      % Initial departure date
+date_depf = [2025 09 30 12 00 00];      % Final departure date
+date_arri = [2024 05 01 12 00 00];      % Initial arrival date
+date_arrf = [2026 08 31 12 00 00];      % Final arrival date
 
 % Conversion to mjd2000----------------------------------------------------
 date_depi_mjd2000 = date2mjd2000(date_depi);    % Initial departure date [mjd2000]
@@ -117,6 +117,8 @@ kep_p = [kep_p(1) 0 kep_p(3) kep_p(4) kep_p(5) kep_p(6)];
 %% Transfer orbit definition------------------------------------------------
 DAYd = dates(1);
 DAYa = dates(2);
+save ('./data/departure.mat','DAYd');
+save ('./data/arrival.mat','DAYa');
 [state_T, state_1, state_2, tof_sol] = transforb(dates,planet_1, planet_2, mu_sun);
 kepseason = uplanet(DAYa,4);
 [season,Ls] = mseasons(kepseason(6)*180/pi);
@@ -128,7 +130,7 @@ mars_rsoi = norm(state_Ma(1:3))*(m_mars/m_sun)^(2/5);
 [tv_Mt,state_Mt]=ode113(@(t,y)dyn_2BP(t,y,mu_sun),0:60:tof_sol,state_Md,options);
 [tv_t,state_tt]=ode113(@(t,y)dyn_2BP(t,y,mu_sun),tv_Mt,state0,options);
 [rr_capture,vv_capture,date_capture] = patching(state_Mt,state_tt,tv_t,DAYd,mars_rsoi);
-
+save('./data/DAYc.mat','date_capture');
 % B-plane definition
 ht = cross(rr_capture,vv_capture)/norm(cross(rr_capture,vv_capture));   % Angular momentum unit vector of the transfer orbit
 [R,T,S] = bplane(vv_capture);
@@ -153,6 +155,12 @@ s4 = stateman.state_4;
 s5 = stateman.state_5;
 h_closest = rp_h - mr_mars;
 save ('Phobos_Orbit.mat','kepf');
+save('./data/iperbole.mat','s1');
+save('./data/ellisse.mat','s2');
+save('./data/cps.mat','s3');
+save('./data/cOM.mat','s4');
+save('./data/circ.mat','s5');
+save('./data/dt.mat','dt');
 %% Only for debug
 % delta_range = [7890];%, 7924, 8924];
 % theta_range_deg = 0:40;
@@ -185,7 +193,7 @@ save ('Phobos_Orbit.mat','kepf');
 figure()
 hold on
 axis equal
-title('Mars system insertion');
+title('\textbf{Mars system insertion}','Interpreter','latex');
 drawPlanet('Mars',[0 0 0],gca,1);
 p1 = plot3(s1(:,1),s1(:,2),s1(:,3),'Linewidth',1.5);
 p2 = plot3(s2(:,1),s2(:,2),s2(:,3),'Linewidth',1.5);
@@ -252,6 +260,7 @@ dv= Vph-3.87;
 meDAYd = dates(1);
 meDAYa = dates(2);
 medates = [meDAYd, meDAYa];
+save('./data/medates.mat','medates');
 [mestate_T, mestate_M, mestate_E, metof_sol] = transforb(medates,planet_2, planet_1, mu_sun);
 
 
@@ -261,7 +270,7 @@ mestate0 = mestate_T(1,:);
 [metv_Mt,mestate_Mt]=ode113(@(t,y)dyn_2BP(t,y,mu_sun),0:60:metof_sol,mestate_Md,options);
 [metv_t,mestate_tt]=ode113(@(t,y)dyn_2BP(t,y,mu_sun),metv_Mt,mestate0,options);
 [rr_escape,vv_escape,date_escape] = patching(mestate_Mt,mestate_tt,metv_t,meDAYd,mars_rsoi);
-
+save('./data/dateesc.mat','date_escape');
 % B-plane definition
 ht = cross(rr_escape,vv_escape)/norm(cross(rr_escape,vv_escape));   % Angular momentum unit vector of the transfer orbit
 [R,T,S] = bplane(vv_escape);
@@ -310,23 +319,27 @@ statecp = kep2car(kep2esc,mu_mars);
 [~,scp]=ode113(@(t,y)dyn_2BP(t,y,mu_mars),[0 T_phobos],statecp,options);
 kep_ellisse = [a_eesc e_esc kep2esc(3) kep_esc(4) kep_esc(5) pi];
 Tellisse = period(kep_ellisse,mu_mars);
+save('./data/Tellisseesc.mat','Tellisse');
 state_ellisse = kep2car(kep_ellisse,mu_mars);
+save('./data/ellissesc.mat','state_ellisse');
 [~,ellisse]=ode113(@(t,y)dyn_2BP(t,y,mu_mars),[0 0.5*Tellisse],state_ellisse,options);
 keplmo = kep_ellisse;
 keplmo(1) = rp_esc; keplmo(2) = 0;
 statelmo = kep2car(keplmo,mu_mars);
+save('./data/sLMO.mat','statelmo');
 Tlmo = period(keplmo,mu_mars);
+save('./data/Tlmo','Tlmo');
 [~,lmo]=ode113(@(t,y)dyn_2BP(t,y,mu_mars),[0 Tlmo],statelmo,options);
 s_ip = ellisse(end,:);
 vv_ip = vp_esc*(s_ip(4:6)/norm(s_ip(4:6)));
 s_ip = [s_ip(1:3) vv_ip];
 [~,iperbole]=ode113(@(t,y)dyn_2BP(t,y,mu_mars),[0 3600*4],s_ip,options);
-
+save('./data/hypesc.mat','iperbole');
 %%
 figure()
 hold on
 axis equal
-title('Mars system escape');
+title('\textbf{Mars system escape}','Interpreter','latex');
 drawPlanet('Mars',[0 0 0],gca,1);
 q1 = plot3(sphobos(:,1),sphobos(:,2), sphobos(:,3),'Linewidth',1.5);
 q2 = plot3(scp(:,1),scp(:,2), scp(:,3),'Linewidth',1.5);

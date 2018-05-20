@@ -28,7 +28,7 @@ s3 = [s1(1:3) vv3];
 figure()
 hold on
 axis equal
-title('LMO insertion');
+title('\textbf{LMO insertion}','Interpreter','latex');
 drawPlanet('Mars',[0 0 0],gca,1);
 q1 = plot3(scp(:,1),scp(:,2), scp(:,3),'Linewidth',1.5);
 q2 = plot3(ellisse(:,1),ellisse(:,2), ellisse(:,3),'Linewidth',1.5);

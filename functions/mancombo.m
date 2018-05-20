@@ -24,8 +24,8 @@ T = period(kepf,mu);
 state05 = kep2car(kepf,mu);
 
 [~,state_1]=ode113(@(t,y)dyn_2BP(t,y,mu),[0 dt_h_heo],state_h,options);
-[n,~] = size(state_1);
-state_1 = state_1(round(n/3):end,:);
+% [n,~] = size(state_1);
+% state_1 = state_1(round(n/3):end,:);
 [~,state_2]=ode113(@(t,y)dyn_2BP(t,y,mu),[0 dt_ps],state02,options);
 [~,state_3]=ode113(@(t,y)dyn_2BP(t,y,mu),[0 dt_OM],state03,options);
 [~,state_4]=ode113(@(t,y)dyn_2BP(t,y,mu),[0 dt_c],state04,options);
@@ -56,8 +56,8 @@ dv2 = [dv_h_heo; dv_ps; dv_OM; dv_c];
 dt2 = [dt_h_heo; dt_ps; dt_OM; dt_c];
 
 [~,state_12]=ode113(@(t,y)dyn_2BP(t,y,mu),[0 dt_h_heo],state_h,options);
-[n2,~] = size(state_12);
-state_12 = state_12(round(n2/3):end,:);
+% [n2,~] = size(state_12);
+% state_12 = state_12(round(n2/3):end,:);
 [~,state_22]=ode113(@(t,y)dyn_2BP(t,y,mu),[0 dt_ps],state02,options);
 [~,state_32]=ode113(@(t,y)dyn_2BP(t,y,mu),[0 dt_c],state03,options);
 [~,state_42]=ode113(@(t,y)dyn_2BP(t,y,mu),[0 dt_OM],state04,options);

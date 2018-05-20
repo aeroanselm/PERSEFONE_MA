@@ -41,10 +41,10 @@ hold on
 axis equal
 %set(gca,'Color','k')
 drawPlanet('Sun',[0 0 0],gca,25);
-drawPlanet('Earth',state_1d(1:3),gca,1500);
-drawPlanet('Mars',state_2a(1:3),gca,1500);
-p1=plot3(state_1(:,1),state_1(:,2),state_1(:,3),'-b','LineWidth',2);
-p2=plot3(state_2(:,1),state_2(:,2),state_2(:,3),'-r','LineWidth',2);
+drawPlanet('Mars',state_1d(1:3),gca,1500);
+drawPlanet('Earth',state_2a(1:3),gca,1500);
+p1=plot3(state_1(:,1),state_1(:,2),state_1(:,3),'-r','LineWidth',2);
+p2=plot3(state_2(:,1),state_2(:,2),state_2(:,3),'-b','LineWidth',2);
 p3=plot3(state_T(:,1),state_T(:,2),state_T(:,3),'-k','LineWidth',2);
 %p4=plot3(state_Tp(:,1),state_Tp(:,2),state_Tp(:,3),'r','LineWidth',2);
 p5=plot3(state_1d(1),state_1d(2),state_1d(3),'*k');
@@ -52,7 +52,7 @@ p6=plot3(state_1a(1),state_1a(2),state_1a(3),'ok');
 plot3(state_2d(1),state_2d(2),state_2d(3),'*k');
 plot3(state_2a(1),state_2a(2),state_2a(3),'ok');
 legend([p1 p2 p3 p5 p6],'Location','southeast','Mars orbit','Earth orbit','Transfer orbit', 'Start','Finish');
-title('Earth - Mars interplanetary leg');
-xlabel('x [Km]');
-ylabel('y [Km]');
-zlabel('z [Km]');
+title('\textbf{Mars - Earth interplanetary leg}','Interpreter','latex');
+xlabel('x [Km]','Interpreter','latex');
+ylabel('y [Km]','Interpreter','latex');
+zlabel('z [Km]','Interpreter','latex');
