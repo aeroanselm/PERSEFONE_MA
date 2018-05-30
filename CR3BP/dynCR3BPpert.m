@@ -37,13 +37,13 @@ c2 = J2m*mum_a*Rm_a^2/2;
 rp = sqrt((x-(1-mu))^2 + y^2 + z^2);
 rm = sqrt((x + mu)^2 + y^2 +z^2);
 
-acc_J2p_x =  3*c1*(x-(1-mu))/rp^5*(1 - 5*z^2/rp^2);
-acc_J2p_y =  3*c1*y/rp^5*(1 - 5*z^2/rp^2);
-acc_J2p_z =  3*c1*z/rp^5*(3 - 5*z^2/rp^2);
+acc_J2p_x =  -3*c1*(x-(1-mu))/rp^5*(1 - 5*z^2/rp^2);
+acc_J2p_y =  -3*c1*y/rp^5*(1 - 5*z^2/rp^2);
+acc_J2p_z =  -3*c1*z/rp^5*(3 - 5*z^2/rp^2);
 
-acc_J2m_x =  3*c2*(x-(-mu))/rm^5*(1 - 5*z^2/rm^2);
-acc_J2m_y =  3*c2*y/rm^5*(1 - 5*z^2/rm^2);
-acc_J2m_z =  3*c2*z/rm^5*(3 - 5*z^2/rm^2);
+acc_J2m_x =  -3*c2*(x-(-mu))/rm^5*(1 - 5*z^2/rm^2);
+acc_J2m_y =  -3*c2*y/rm^5*(1 - 5*z^2/rm^2);
+acc_J2m_z =  -3*c2*z/rm^5*(3 - 5*z^2/rm^2);
 
 
 S_d(1) = S(4);
