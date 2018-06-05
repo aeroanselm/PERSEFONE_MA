@@ -147,7 +147,7 @@ rrpar = mars_rsoi*cos(gamma)*-S;
 rr_capture = rrpar+Delta;
 state_h = [rr_capture vv_capture];
 rp_f = kep_p(1);
-[dvv, dv, dt,stateman,rp_h, kepf, sol] = mancombo(state_h,mu_mars,kep_p(3),kep_p(4),0.9,rp_f); 
+[dvv, dv, dt,stateman,rp_h, kepf, sol] = mancombo(state_h,mu_mars,kep_p(3),kep_p(4),0.9,rp_f)
 s1 = stateman.state_1;
 s2 = stateman.state_2;
 s3 = stateman.state_3;
@@ -162,32 +162,32 @@ save('./data/cOM.mat','s4');
 save('./data/circ.mat','s5');
 save('./data/dt.mat','dt');
 %% Only for debug
-% delta_range = [7890];%, 7924, 8924];
-% theta_range_deg = 0:40;
-% theta_range = theta_range_deg*pi/180;
-% 
-% str = [];
-% figure()
-% hold on;
-% grid on;
-% title('\DeltaV vs \theta');
-% parfor i = 1:length(delta_range)
-% 	delta = delta_range(i);
-% 	dvtot = [];
-% 	for j = 1:length(theta_range)
-% 		B = sin(theta_range(j))*R + cos(theta_range(j))*T;
-% 		Delta = delta*B;
-% 		gamma = asin(norm(Delta)/mars_rsoi);
-% 		rrpar = mars_rsoi*cos(gamma)*-S;
-% 		rr_capture = rrpar+Delta;
-% 		state_h = [rr_capture vv_capture];
-% 		rp_f = kep_p(1);
-% 		[dvv, dv, dt,stateman,rp_h, kepf, sol] = mancombo(state_h,mu_mars,kep_p(3),kep_p(4),0.9,rp_f);
-% 		dvtot(j) = sum(dv);
-%     end
-% 	plot(theta_range*180/pi,dvtot);
-%     % insert legend
-% end
+delta_range = [7924];%, 7924, 8924];
+theta_range_deg = 20:80;
+theta_range = theta_range_deg*pi/180;
+
+str = [];
+figure()
+hold on;
+grid on;
+title('\DeltaV vs \theta');
+for i = 1:length(delta_range)
+	delta = delta_range(i);
+	dvtot = [];
+	for j = 1:length(theta_range)
+		B = sin(theta_range(j))*R + cos(theta_range(j))*T;
+		Delta = delta*B;
+		gamma = asin(norm(Delta)/mars_rsoi);
+		rrpar = mars_rsoi*cos(gamma)*-S;
+		rr_capture = rrpar+Delta;
+		state_h = [rr_capture vv_capture];
+		rp_f = kep_p(1);
+		[dvv, dv, dt,stateman,rp_h, kepf, sol] = mancombo(state_h,mu_mars,kep_p(3),kep_p(4),0.9,rp_f);
+		dvtot(j) = sum(dv);
+    end
+	plot(theta_range*180/pi,dvtot);
+    % insert legend
+end
 
 %% Plot
 figure()
