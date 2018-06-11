@@ -1,4 +1,4 @@
-function [S_d] = dynCR3BPpert(t,S,mu,flag)
+function [S_d] = dynCR3BPpert_err(t,S,mu,flag)
 
 x = S(1);
 y = S(2);

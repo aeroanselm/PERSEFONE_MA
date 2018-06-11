@@ -49,21 +49,7 @@ clc
 
 %% DATA SECTION------------------------------------------------------------
 addpath(genpath('./functions'))         % Adding the functions folder to path [linux version, works even on Windows]
-planet_1 = 3;                           % Earth number according to uplanet function
-planet_2 = 4;                           % Mars number according to uplanet function
-mu_earth = astroConstants(13);          % Earth's planetary constant 
-mu_mars = astroConstants(14);           % Mars' planetary constant
-mu_sun = astroConstants(4);             % Sun planetary constant
-mu_phobos = 0.0007112;                  % Phobos gravitational constant
-G = astroConstants(1);                  % Universal gravitational constant
-AU = astroConstants(2);                 % Astronomic Unit
-m_mars = mu_mars/G;                     % Mass of Mars
-m_sun = mu_sun/G;                       % Mass of the Sun
-m_earth = mu_earth/G;                   % Mass of the Earth
-m_phobos = mu_phobos/G;                 % Mass of Phobos
-mr_earth = astroConstants(23);          % Earth's mean radius
-mr_mars = astroConstants(24);           % Mars' mean radius
-options = odeset('Reltol',1e-13,'AbsTol',1e-14);
+ma_data;
 
 %% Definition of the launch and arrival window----------------------------- 
 date_depi = [2023 07 01 12 00 00];      % Initial departure date
@@ -214,10 +200,10 @@ dsm_a = norm(vv_capture-V_relsoi);
 
 %% Return to Earth
 % Definition of the launch and arrival window----------------------------- 
-medate_depi = [2028 09 01 12 00 00];      % Initial departure date
-medate_depf = [2035 06 19 12 00 00];      % Final departure date
-medate_arri = [2029 03 06 12 00 00];      % Initial arrival date
-medate_arrf = [2035 05 10 12 00 00];      % Final arrival date
+medate_depi = [2024 01 01 12 00 00];      % Initial departure date
+medate_depf = [2035 12 31 12 00 00];      % Final departure date
+medate_arri = [2024 01 01 12 00 00];      % Initial arrival date
+medate_arrf = [2035 12 31 12 00 00];      % Final arrival date
 
 % Conversion to mjd2000----------------------------------------------------
 medate_depi_mjd2000 = date2mjd2000(medate_depi);
@@ -227,10 +213,10 @@ medate_arrf_mjd2000 = date2mjd2000(medate_arrf);
 
 % Definition of launch and arrival window arrays---------------------------
 N = 5;                                              % Days per step 
-%medep_dates = medate_depi_mjd2000:N:medate_depf_mjd2000;
-%mearr_dates = medate_arri_mjd2000:N:medate_arrf_mjd2000;
-medep_dates = 10000:N:11830;
-mearr_dates = 10790:N:12020;
+medep_dates = medate_depi_mjd2000:N:medate_depf_mjd2000;
+mearr_dates = medate_arri_mjd2000:N:medate_arrf_mjd2000;
+% medep_dates = 10000:N:11830;
+% mearr_dates = 10790:N:12020;
 %%
 [mePCdata] = porkChopDatav3(planet_2,planet_1,medep_dates,mearr_dates);
 dv1_dMAX=3;
